@@ -1,3 +1,4 @@
+using GeoJSON.Net.Geometry;
 using PolyLine;
 using System.Collections.Generic;
 using Xunit;
@@ -10,23 +11,24 @@ namespace PolyLineEncoderTest
 		public void Test_Encode_Point()
 		{
 			var encoder = new PolyLineEncoder();
-			Assert.Equal("_p~iF~ps|U", encoder.Encode(new Point(38.5, -120.2)));
+			Assert.Equal("_p~iF~ps|U", encoder.Encode(new Position(38.5, -120.2)));
 		}
 
 		[Fact]
 		public void Test_Encode_Static_Point()
 		{
-			Assert.Equal("_p~iF~ps|U", PolyLineEncoder.Encode(new Point(38.5, -120.2), 5));
+			var encoder = new PolyLineEncoder();
+			Assert.Equal("_p~iF~ps|U", encoder.Encode(new Position(38.5, -120.2)));
 		}
 
 		[Fact]
 		public void Test_Encode_MultiPoint()
 		{
-			var multiPoint = new MultiPoint(new List<Point>()
+			var multiPoint = new LineString(new List<Position>()
 			{
-				new Point(38.5, -120.2),
-				new Point(40.7, -120.95),
-				new Point(43.252, -126.453),
+				new Position(38.5, -120.2),
+				new Position(40.7, -120.95),
+				new Position(43.252, -126.453),
 			});
 
 			var encoder = new PolyLineEncoder();
@@ -36,11 +38,11 @@ namespace PolyLineEncoderTest
 		[Fact]
 		public void Test_Decode()
 		{
-			var multiPoint = new MultiPoint(new List<Point>()
+			var multiPoint = new LineString(new List<Position>()
 			{
-				new Point(38.5, -120.2),
-				new Point(40.7, -120.95),
-				new Point(43.252, -126.453),
+				new Position(38.5, -120.2),
+				new Position(40.7, -120.95),
+				new Position(43.252, -126.453),
 			});
 
 			var decoder = new PolyLineEncoder();
