@@ -30,24 +30,20 @@ namespace PolyLine
 		/// <summary>
 		/// Gets or sets the decimal precision
 		/// </summary>
+		/// <exception cref="T:System.ArgumentOutOfRangeException">The value of <paramref name="Precision" /> is negative or higher than 9</exception> 
 		public int Precision
 		{
 			get => _precision;
 			set
 			{
+				if (value < 0 || value > 9)
+				{
+					throw new ArgumentOutOfRangeException(nameof(Precision), "Value must be between 1 and 9");
+				}
+
 				_precision = value;
 				_factor = CalculateFactor(_precision);
 			}
-		}
-
-		/// <summary>
-		/// Encodes the coordinates from a GeoJSON <see cref="Point" /> geometry
-		/// </summary>
-		/// <param name="point">Point to encode</param>
-		/// <returns>Encoded value</returns>
-		public string Encode(Point point)
-		{
-			return Encode(point.Coordinates);
 		}
 
 		/// <summary>
@@ -55,8 +51,16 @@ namespace PolyLine
 		/// </summary>
 		/// <param name="position">Position to encode</param>
 		/// <returns>Encoded value</returns>
+		/// <exception cref="T:System.ArgumentNullException">The address of <paramref name="position" /> is a <see langword="null" /> pointer.</exception> 
+		/// <exception cref="T:System.ArgumentOutOfRangeException">The coordinates in <paramref name="position" /> must be valid</exception> 
 		public string Encode(IPosition position)
 		{
+			if (position is null)
+				throw new ArgumentNullException(nameof(position));
+
+			if (!IsValidCoordinate(position.Latitude) || !IsValidCoordinate(position.Longitude))
+				throw new ArgumentOutOfRangeException(nameof(Precision), "Invalid coordinate must be > -180 and < 180");
+
 			return Compress(position.Latitude, 0.0, _factor) + Compress(position.Longitude, 0.0, _factor);
 		}
 
@@ -65,9 +69,28 @@ namespace PolyLine
 		/// </summary>
 		/// <param name="lineString">LineString to encode</param>
 		/// <returns>Encoded value</returns>
+		/// <exception cref="T:System.ArgumentNullException">The address of <paramref name="lineString" /> is a <see langword="null" /> pointer.</exception>
+		/// <exception cref="T:System.ArgumentOutOfRangeException">All coordinates in <paramref name="lineString" /> must be valid</exception> 
 		public string Encode(LineString lineString)
 		{
+			if (lineString is null)
+				throw new ArgumentNullException(nameof(lineString));
+
 			return EncodeLineString(lineString, _factor);
+		}
+
+		/// <summary>
+		/// Decodes all coordinates in a string to a GeoJSON <see cref="LineString" /> geometry
+		/// </summary>
+		/// <param name="coords">string to decode</param>
+		/// <returns>GeoJSON representation of coordinates from input</returns>
+		/// <exception cref="T:System.ArgumentNullException">The address of <paramref name="coords" /> is a <see langword="null" /> pointer.</exception> 
+		public LineString Decode(ReadOnlySpan<char> coords)
+		{
+			if (coords == null)
+				throw new ArgumentNullException(nameof(coords));
+
+			return DecodeString(coords, _factor);
 		}
 
 		private static string EncodeLineString(LineString line, int factor)
@@ -75,6 +98,9 @@ namespace PolyLine
 			var coordinates = line.Coordinates;
 			if (coordinates.Count == 0)
 				return string.Empty;
+
+			if (!IsValidCoordinate(coordinates[0].Latitude) || !IsValidCoordinate(coordinates[0].Longitude))
+				throw new ArgumentOutOfRangeException(nameof(Precision), "Invalid coordinate must be > -180 and < 180");
 
 			var stringBuilder = new StringBuilder();
 			stringBuilder.Append(Compress(coordinates[0].Latitude, 0, factor));
@@ -84,6 +110,9 @@ namespace PolyLine
 			{
 				var latitude = coordinates[i].Latitude;
 				var longitude = coordinates[i].Longitude;
+
+				if (!IsValidCoordinate(latitude) || !IsValidCoordinate(longitude))
+					throw new ArgumentOutOfRangeException(nameof(Precision), "Invalid coordinate must be > -180 and < 180");
 
 				var prevLatitude = coordinates[i - 1].Latitude;
 				var prevLongitude = coordinates[i - 1].Longitude;
@@ -117,23 +146,17 @@ namespace PolyLine
 			return chars.Slice(0, pos).ToString();
 		}
 
-		/// <summary>
-		/// Decodes all coordinates in a string to a GeoJSON <see cref="LineString" /> geometry
-		/// </summary>
-		/// <param name="coords">string to decode</param>
-		/// <returns>GeoJSON representation of coordinates from input</returns>
-		public LineString Decode(ReadOnlySpan<char> coords)
-		{
-			return DecodeString(coords, _factor);
-		}
-
 		private static LineString DecodeString(ReadOnlySpan<char> coords, int factor)
 		{
 			var points = new List<Position>();
 			for (var i = 0; i < coords.Length; i++)
 			{
 				double latitude = Decompress(coords, factor, ref i);
-				double longitude = Decompress(coords, factor, ref i);
+				double longitude;
+				if (i < coords.Length)
+					longitude = Decompress(coords, factor, ref i);
+				else
+					longitude = double.NaN;
 
 				if (points.Count > 0)
 				{
@@ -177,6 +200,7 @@ namespace PolyLine
 			return (double)result / factor;
 		}
 
-		private static int CalculateFactor(int precision) =>  (int)Math.Pow(10.0, precision);
+		private static int CalculateFactor(int precision) => (int)Math.Pow(10.0, precision);
+		private static bool IsValidCoordinate(double value) => value is <= 180.0 and >= -180.0;
 	}
 }
