@@ -3,7 +3,7 @@
 Coordinate compression based on https://developers.google.com/maps/documentation/utilities/polylinealgorithm
 inspiration taken from https://github.com/mapbox/polyline
 
-Supports GeoJSON.NET LineString
+Supports GeoJSON.NET LineString and Position
 
 ```c#
 // [38.5, -120.2]
