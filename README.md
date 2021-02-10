@@ -7,7 +7,7 @@ Supports GeoJSON.NET LineString
 
 ```c#
 // [38.5, -120.2]
-new PolyLineEncoder().Encode(new Position(38.5, -120.2), 5)
+new PolyLineEncoder().Encode(new Position(38.5, -120.2))
 "_p~iF~ps|U"
 ```
 
