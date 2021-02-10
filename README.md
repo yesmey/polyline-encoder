@@ -3,21 +3,23 @@
 Coordinate compression based on https://developers.google.com/maps/documentation/utilities/polylinealgorithm
 inspiration taken from https://github.com/mapbox/polyline
 
+Supports GeoJSON.NET LineString
+
 ```c#
 // [38.5, -120.2]
-PolyLineEncoder.Encode(new Point(38.5, -120.2), 5)
+new PolyLineEncoder().Encode(new Position(38.5, -120.2), 5)
 "_p~iF~ps|U"
 ```
 
 ```c#
 // [[38.5, -120.2], [40.7, -120.95], [43.252, -126.453]]
-var multiPoint = new MultiPoint(new List<Point>()
+var lineString = new LineString(new List<Position>()
 {
-    new Point(38.5, -120.2),
-    new Point(40.7, -120.95),
-    new Point(43.252, -126.453),
+    new Position(38.5, -120.2),
+    new Position(40.7, -120.95),
+    new Position(43.252, -126.453),
 });
-PolyLineEncoder.Encode(multiPoint, 5)
+new PolyLineEncoder().Encode(lineString)
 ->
 "_p~iF~ps|U_ulLnnqC_mqNvxq`@"
 ```
