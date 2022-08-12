@@ -157,7 +157,7 @@ public static class PolyLineEncoder
 		if (current - previous < 0)
 			coordinate = ~coordinate;
 
-		Span<char> chars = stackalloc char[5 + precision];
+		Span<char> chars = stackalloc char[precision + 5];
 		var pos = 0;
 		while (coordinate >= 0x20)
 		{
@@ -167,7 +167,7 @@ public static class PolyLineEncoder
 
 		chars[pos++] = (char)(coordinate + 63);
 		return chars[..pos].ToString();
-	}
+    }
 
 	private static LineString DecodeString(ReadOnlySpan<char> coords, int factor)
 	{
